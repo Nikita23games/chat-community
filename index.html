@@ -3,75 +3,142 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Global Real-Time Chat</title>
+    <title>Global Community Chat</title>
     <style>
         :root {
             --bg-color: #e5ddd5;
             --my-msg-bg: #dcf8c6;
             --other-msg-bg: #ffffff;
             --primary-color: #075e54;
+            --panel-bg: #ededed;
         }
-        body { font-family: 'Segoe UI', sans-serif; background: #d1d1d1; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; }
-        
-        #auth-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: flex; justify-content: center; align-items: center; z-index: 100; }
-        .auth-card { background: white; padding: 30px; border-radius: 15px; text-align: center; width: 300px; display: flex; flex-direction: column; gap: 15px; }
-        #avatar-preview { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; margin: 0 auto; border: 2px solid var(--primary-color); }
 
-        #chat-window { width: 500px; height: 90vh; background: var(--bg-color); display: none; flex-direction: column; box-shadow: 0 10px 25px rgba(0,0,0,0.2); border-radius: 10px; overflow: hidden;}
-        #messages-container { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
-        
-        .message { display: flex; gap: 10px; max-width: 80%; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: #dadbd3; 
+            margin: 0; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+        }
+
+        /* Окно чата адаптировано под ПК */
+        #chat-window { 
+            width: 100%; 
+            max-width: 600px; 
+            height: 90vh; 
+            background: var(--bg-color); 
+            display: none; 
+            flex-direction: column; 
+            box-shadow: 0 12px 28px rgba(0,0,0,0.12); 
+            border-radius: 8px; 
+            overflow: hidden;
+        }
+
+        /* Шапка чата */
+        header {
+            background: var(--panel-bg);
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        #user-info { display: flex; align-items: center; gap: 10px; font-weight: 500; }
+        .status-dot { width: 10px; height: 10px; background: #4ad504; border-radius: 50%; }
+
+        #messages-container { 
+            flex: 1; 
+            padding: 20px; 
+            overflow-y: auto; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 8px; 
+            background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); /* Классический фон */
+        }
+
+        /* Сообщения */
+        .message { display: flex; gap: 8px; max-width: 85%; align-items: flex-end; }
         .message.mine { align-self: flex-end; flex-direction: row-reverse; }
         .message.others { align-self: flex-start; }
+
+        .msg-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+        .msg-bubble { padding: 6px 10px; border-radius: 8px; box-shadow: 0 1px 1px rgba(0,0,0,0.1); position: relative; min-width: 60px; }
         
-        .msg-avatar { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; }
-        .msg-bubble { padding: 8px 12px; border-radius: 10px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); word-wrap: break-word; }
-        .mine .msg-bubble { background: var(--my-msg-bg); }
-        .others .msg-bubble { background: var(--other-msg-bg); }
-        
-        .nickname { font-size: 11px; font-weight: bold; color: var(--primary-color); margin-bottom: 3px; display: block; }
+        .mine .msg-bubble { background: var(--my-msg-bg); border-top-right-radius: 0; }
+        .others .msg-bubble { background: var(--other-msg-bg); border-top-left-radius: 0; }
+
+        .nickname { font-size: 12px; font-weight: bold; color: var(--primary-color); margin-bottom: 2px; }
+        .msg-text { font-size: 14.5px; color: #303030; line-height: 1.4; word-break: break-word; }
         .msg-time { font-size: 10px; color: #888; text-align: right; margin-top: 4px; }
 
-        #input-area { background: #f0f0f0; padding: 15px; display: flex; gap: 10px; }
-        input[type="text"] { flex: 1; padding: 12px; border-radius: 25px; border: none; outline: none; }
-        button { background: var(--primary-color); color: white; border: none; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; font-size: 20px; }
-        .hidden { display: none !important; }
-        
-        /* Эффект тряски */
-        .shake { animation: shake-anim 0.3s ease-in-out; }
-        @keyframes shake-anim {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-4px); }
-            75% { transform: translateX(4px); }
+        /* Ввод сообщения */
+        #input-area { background: #f0f0f0; padding: 10px 15px; display: flex; align-items: center; gap: 10px; }
+        input[type="text"] { 
+            flex: 1; 
+            padding: 12px 18px; 
+            border-radius: 20px; 
+            border: 1px solid #fff; 
+            outline: none; 
+            font-size: 15px;
         }
+
+        button#send-btn { 
+            background: var(--primary-color); 
+            color: white; 
+            border: none; 
+            width: 42px; 
+            height: 42px; 
+            border-radius: 50%; 
+            cursor: pointer; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.1s;
+        }
+        button#send-btn:active { transform: scale(0.9); }
+
+        /* Авторизация */
+        #auth-overlay { position: fixed; inset: 0; background: #f0f2f5; display: flex; justify-content: center; align-items: center; z-index: 100; }
+        .auth-card { background: white; padding: 40px; border-radius: 10px; box-shadow: 0 17px 50px rgba(0,0,0,0.19); text-align: center; width: 350px; }
+        #avatar-preview { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; margin-bottom: 20px; border: 4px solid #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .auth-card input { width: 90%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 6px; }
+        
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
 <div id="auth-overlay">
     <div class="auth-card">
-        <h3>Общий чат</h3>
-        <img src="https://via.placeholder.com/80" id="avatar-preview">
+        <h2>Настройка профиля</h2>
+        <img src="https://via.placeholder.com/120" id="avatar-preview">
         <input type="file" id="avatar-input" accept="image/*">
-        <input type="text" id="reg-nick" placeholder="Введите ваш ник">
-        <button id="reg-btn">Войти</button>
+        <input type="text" id="reg-nick" placeholder="Ваше имя на ПК">
+        <button id="reg-btn" style="width: 100%; border-radius: 6px; height: 45px;">Войти в сообщество</button>
     </div>
 </div>
 
 <div id="chat-window">
+    <header>
+        <div id="user-info">
+            <div class="status-dot"></div>
+            <span id="display-name">Чат</span>
+        </div>
+    </header>
     <div id="messages-container"></div>
     <div id="input-area">
-        <input type="text" id="msg-input" placeholder="Написать сообщение..." autocomplete="off">
+        <input type="text" id="msg-input" placeholder="Введите сообщение (Enter для отправки)..." autocomplete="off">
         <button id="send-btn">➤</button>
     </div>
 </div>
 
 <script type="module">
-    // Импорт необходимых модулей Firebase
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
-    import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-database.js";
+    import { getDatabase, ref, push, onChildAdded, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-database.js";
 
-    // Твой конфиг
     const firebaseConfig = {
         apiKey: "AIzaSyD2sN925y_wx5qn-E6hFRWp77YL56SC2j0",
         authDomain: "chat-community-63b8b.firebaseapp.com",
@@ -82,7 +149,6 @@
         appId: "1:247042160782:web:0556c9ad0681db3649f1df"
     };
 
-    // Инициализация
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
     const messagesRef = ref(db, 'messages');
@@ -94,7 +160,6 @@
     
     let currentUser = JSON.parse(localStorage.getItem('chat_v4_user')) || { nick: '', avatar: '' };
 
-    // Обработка аватара
     avatarInput.onchange = (e) => {
         const reader = new FileReader();
         reader.onload = (ev) => {
@@ -104,11 +169,9 @@
         reader.readAsDataURL(e.target.files[0]);
     };
 
-    // Вход в чат
     document.getElementById('reg-btn').onclick = () => {
         const nick = document.getElementById('reg-nick').value.trim();
-        if (!nick || !currentUser.avatar) return alert("Выберите фото и введите ник!");
-        
+        if (!nick || !currentUser.avatar) return alert("Нужно фото и имя!");
         currentUser.nick = nick;
         localStorage.setItem('chat_v4_user', JSON.stringify(currentUser));
         startChat();
@@ -117,24 +180,24 @@
     function startChat() {
         document.getElementById('auth-overlay').classList.add('hidden');
         document.getElementById('chat-window').style.display = 'flex';
-        
-        // Слушаем новые сообщения из Firebase
+        document.getElementById('display-name').textContent = currentUser.nick;
+        input.focus(); // Сразу ставим курсор в поле ввода (удобно для ПК)
+
         onChildAdded(messagesRef, (snapshot) => {
-            const data = snapshot.val();
-            renderMessage(data);
+            renderMessage(snapshot.val());
         });
     }
 
     function renderMessage(data) {
         const isMine = data.nick === currentUser.nick;
         const msgDiv = document.createElement('div');
-        msgDiv.className = `message ${isMine ? 'mine' : 'others'} shake`;
+        msgDiv.className = `message ${isMine ? 'mine' : 'others'}`;
         
         msgDiv.innerHTML = `
             <img src="${data.avatar}" class="msg-avatar">
             <div class="msg-bubble">
-                <span class="nickname">${isMine ? 'Вы' : data.nick}</span>
-                <div>${data.text}</div>
+                <div class="nickname">${isMine ? 'Вы' : data.nick}</div>
+                <div class="msg-text">${data.text}</div>
                 <div class="msg-time">${data.time}</div>
             </div>
         `;
@@ -147,23 +210,23 @@
         const text = input.value.trim();
         if (text) {
             const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            // Отправка в облако
             push(messagesRef, {
                 nick: currentUser.nick,
                 avatar: currentUser.avatar,
                 text: text,
-                time: time
+                time: time,
+                timestamp: serverTimestamp()
             });
             input.value = '';
         }
     }
 
-    // Если уже залогинены — сразу в чат
     if (currentUser.nick) startChat();
 
     document.getElementById('send-btn').onclick = sendMessage;
-    input.onkeypress = (e) => e.key === 'Enter' && sendMessage();
-
+    input.onkeydown = (e) => {
+        if (e.key === 'Enter') sendMessage();
+    };
 </script>
 
 </body>
