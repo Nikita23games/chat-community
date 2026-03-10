@@ -3,88 +3,78 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Community Chat</title>
+    <title>Admin Chat System</title>
     <style>
-        :root {
-            --bg: #e5ddd5;
-            --accent: #075e54;
-            --white: #ffffff;
-            --my-msg: #dcf8c6;
-        }
+        :root { --bg: #e5ddd5; --accent: #075e54; --white: #fff; --admin-color: #ff3b3b; }
         body { font-family: 'Segoe UI', sans-serif; background: #dadbd3; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; }
         
         /* Авторизация */
         #auth-container { position: fixed; inset: 0; background: #f0f2f5; display: flex; justify-content: center; align-items: center; z-index: 1000; }
-        .auth-card { background: var(--white); padding: 30px; border-radius: 12px; width: 340px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; }
-        .auth-card h2 { margin-top: 0; color: var(--accent); }
-        .auth-card input { width: 90%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; }
-        .auth-card button { width: 100%; padding: 12px; background: var(--accent); color: white; border: none; border-radius: 8px; cursor: pointer; margin-top: 15px; font-weight: bold; }
-        .toggle-link { font-size: 13px; color: #555; cursor: pointer; display: block; margin-top: 15px; text-decoration: underline; }
+        .auth-card { background: var(--white); padding: 30px; border-radius: 12px; width: 340px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .auth-card input { width: 90%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; }
+        .auth-card button { width: 100%; padding: 12px; background: var(--accent); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
 
-        #preview-img { width: 90px; height: 90px; border-radius: 50%; object-fit: cover; margin-bottom: 10px; border: 3px solid var(--accent); background: #eee; }
-
-        /* Чат интерфейс */
-        #chat-window { width: 100%; max-width: 600px; height: 90vh; background: var(--bg); display: none; flex-direction: column; border-radius: 10px; overflow: hidden; box-shadow: 0 5px 30px rgba(0,0,0,0.15); }
+        /* Чат */
+        #chat-window { width: 600px; height: 90vh; background: var(--bg); display: none; flex-direction: column; border-radius: 10px; overflow: hidden; position: relative; }
         header { background: #ededed; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ccc; }
+        #messages-container { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
         
-        #messages-container { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); }
-        
-        .message { display: flex; gap: 10px; max-width: 80%; align-items: flex-end; }
+        .message { display: flex; gap: 10px; max-width: 80%; }
         .message.mine { align-self: flex-end; flex-direction: row-reverse; }
-        .msg-avatar { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
-        .msg-bubble { padding: 8px 12px; border-radius: 10px; background: var(--white); box-shadow: 0 1px 1px rgba(0,0,0,0.1); position: relative; }
-        .mine .msg-bubble { background: var(--my-msg); }
-        .msg-nick { font-size: 11px; font-weight: bold; color: var(--accent); margin-bottom: 3px; display: block; }
-        
-        #input-area { background: #f0f0f0; padding: 15px; display: flex; gap: 10px; align-items: center; }
-        #input-area input { flex: 1; padding: 12px 18px; border-radius: 25px; border: 1px solid #ddd; outline: none; }
-        #send-btn { background: var(--accent); color: white; border: none; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; font-size: 20px; display: flex; align-items: center; justify-content: center; }
+        .msg-avatar { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; cursor: pointer; }
+        .msg-bubble { padding: 8px 12px; border-radius: 10px; background: var(--white); box-shadow: 0 1px 1px rgba(0,0,0,0.1); }
+        .mine .msg-bubble { background: #dcf8c6; }
 
-        .shake { animation: shake-msg 0.3s ease-in-out; }
-        @keyframes shake-msg { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+        /* Читы / Админка */
+        #admin-btn { display: none; background: var(--admin-color); color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        #admin-panel { position: absolute; top: 60px; right: 20px; background: white; padding: 15px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); z-index: 500; display: none; width: 200px; }
+        .admin-panel button { width: 100%; margin-bottom: 5px; cursor: pointer; padding: 8px; border: 1px solid #ddd; border-radius: 5px; background: #f9f9f9; }
+        .admin-panel button:hover { background: #eee; }
+
+        #input-area { background: #f0f0f0; padding: 15px; display: flex; gap: 10px; }
+        #input-area input { flex: 1; padding: 12px; border-radius: 20px; border: none; outline: none; }
+        
         .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
 <div id="auth-container">
-    <div id="reg-box" class="auth-card">
-        <h2>Создать аккаунт</h2>
-        <img src="https://via.placeholder.com/90" id="preview-img">
-        <input type="file" id="reg-file" accept="image/*">
-        <input type="text" id="reg-nick" placeholder="Никнейм">
-        <input type="password" id="reg-pass" placeholder="Пароль">
-        <button id="do-reg">Зарегистрироваться</button>
-        <span class="toggle-link" onclick="toggleAuth(false)">Уже есть аккаунт? Войти</span>
-    </div>
-
-    <div id="login-box" class="auth-card hidden">
-        <h2>Вход в чат</h2>
+    <div id="login-box" class="auth-card">
+        <h2>Вход в систему</h2>
         <input type="text" id="login-nick" placeholder="Никнейм">
         <input type="password" id="login-pass" placeholder="Пароль">
         <button id="do-login">Войти</button>
-        <span class="toggle-link" onclick="toggleAuth(true)">Новый пользователь? Регистрация</span>
+        <p style="font-size: 12px; color: #666;">(Для регистрации просто введите новые данные)</p>
     </div>
 </div>
 
 <div id="chat-window">
     <header>
-        <div style="display:flex; align-items:center; gap:10px;">
-            <div style="width:10px; height:10px; background:#4ad504; border-radius:50%;"></div>
-            <strong id="my-name-title">Чат</strong>
+        <strong id="my-name">Чат</strong>
+        <div>
+            <button id="admin-btn" onclick="document.getElementById('admin-panel').style.display = 'block'">★ ЧИТЫ</button>
+            <button onclick="logout()">Выйти</button>
         </div>
-        <button onclick="logout()" style="background:none; border:1px solid #bbb; border-radius:5px; cursor:pointer; padding:3px 8px;">Выйти</button>
     </header>
+
+    <div id="admin-panel">
+        <h4 style="margin:0 0 10px 0; color:red;">Панель Nikita</h4>
+        <button onclick="clearHistory()">Очистить историю</button>
+        <button onclick="banPrompt()">Забанить по нику</button>
+        <button onclick="document.getElementById('admin-panel').style.display='none'">Закрыть</button>
+    </div>
+
     <div id="messages-container"></div>
     <div id="input-area">
-        <input type="text" id="msg-input" placeholder="Напишите сообщение..." autocomplete="off">
-        <button id="send-btn">➤</button>
+        <input type="text" id="msg-input" placeholder="Сообщение...">
+        <button id="send-btn" style="background:var(--accent); color:white; border:none; width:40px; height:40px; border-radius:50%; cursor:pointer;">➤</button>
     </div>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
-    import { getDatabase, ref, push, onChildAdded, get, child } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-database.js";
+    import { getDatabase, ref, push, onChildAdded, get, child, remove, onValue, set } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-database.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyD2sN925y_wx5qn-E6hFRWp77YL56SC2j0",
@@ -100,116 +90,107 @@
     const db = getDatabase(app);
     let user = null;
 
-    // Переключение между формами
-    window.toggleAuth = (showReg) => {
-        document.getElementById('reg-box').classList.toggle('hidden', !showReg);
-        document.getElementById('login-box').classList.toggle('hidden', showReg);
-    };
-
-    // Предпросмотр аватарки
-    let base64Avatar = "";
-    document.getElementById('reg-file').onchange = (e) => {
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-            document.getElementById('preview-img').src = ev.target.result;
-            base64Avatar = ev.target.result;
-        };
-        reader.readAsDataURL(e.target.files[0]);
-    };
-
-    // ЛОГИКА РЕГИСТРАЦИИ
-    document.getElementById('do-reg').onclick = async () => {
-        const nick = document.getElementById('reg-nick').value.trim();
-        const pass = document.getElementById('reg-pass').value.trim();
-        
-        if(!nick || !pass || !base64Avatar) return alert("Заполните всё и загрузите фото!");
-
-        const userRef = ref(db, 'users/' + nick);
-        const check = await get(userRef);
-        
-        if(check.exists()) return alert("Этот ник уже занят!");
-
-        await push(userRef, { nick, pass, avatar: base64Avatar });
-        alert("Регистрация успешна! Теперь войдите.");
-        toggleAuth(false);
-    };
-
-    // ЛОГИКА ВХОДА
+    // --- АВТОРИЗАЦИЯ И РЕГИСТРАЦИЯ ---
     document.getElementById('do-login').onclick = async () => {
         const nick = document.getElementById('login-nick').value.trim();
         const pass = document.getElementById('login-pass').value.trim();
         
-        const snapshot = await get(child(ref(db), `users/${nick}`));
-        
-        if(snapshot.exists()) {
-            const userData = Object.values(snapshot.val())[0];
-            if(userData.pass === pass) {
-                user = userData;
-                localStorage.setItem('chat_session', JSON.stringify(user));
-                startChat();
+        const userRef = ref(db, 'users/' + nick);
+        const snapshot = await get(userRef);
+
+        if (snapshot.exists()) {
+            const data = Object.values(snapshot.val())[0];
+            if (data.pass === pass) {
+                loginSuccess(data);
             } else {
                 alert("Неверный пароль!");
             }
         } else {
-            alert("Пользователь не найден!");
+            // Если пользователя нет — регистрируем
+            const newData = { nick, pass, avatar: "https://via.placeholder.com/35" };
+            await push(userRef, newData);
+            loginSuccess(newData);
         }
     };
+
+    function loginSuccess(userData) {
+        user = userData;
+        localStorage.setItem('chat_session', JSON.stringify(user));
+        startChat();
+    }
 
     function startChat() {
         document.getElementById('auth-container').classList.add('hidden');
         document.getElementById('chat-window').style.display = 'flex';
-        document.getElementById('my-name-title').textContent = user.nick;
-        document.getElementById('messages-container').innerHTML = ''; // Сброс локальной истории при входе
+        document.getElementById('my-name').textContent = user.nick;
 
+        // Проверка на админа (ТВОЙ АККАУНТ)
+        if (user.nick === "Nikita" && user.pass === "nikitakit") {
+            document.getElementById('admin-btn').style.display = "inline-block";
+        }
+
+        // ПРОВЕРКА НА БАН (СЛУШАТЕЛЬ)
+        onValue(ref(db, 'banned/' + user.nick), (snapshot) => {
+            if (snapshot.exists()) {
+                alert("ВАС ЗАБАНИЛИ!");
+                logout();
+            }
+        });
+
+        // Загрузка сообщений
         onChildAdded(ref(db, 'messages'), (snap) => {
-            renderMessage(snap.val());
+            renderMessage(snap.val(), snap.key);
         });
     }
 
-    function renderMessage(data) {
+    function renderMessage(data, key) {
         const isMine = data.nick === user.nick;
         const div = document.createElement('div');
-        div.className = `message ${isMine ? 'mine' : 'others'} shake`;
+        div.className = `message ${isMine ? 'mine' : 'others'}`;
         div.innerHTML = `
             <img src="${data.avatar}" class="msg-avatar">
             <div class="msg-bubble">
-                <span class="msg-nick">${isMine ? 'Вы' : data.nick}</span>
-                <div style="word-break:break-word;">${data.text}</div>
-                <div style="font-size:9px; color:#888; text-align:right; margin-top:4px;">${data.time}</div>
+                <small style="font-weight:bold; font-size:10px; color:var(--accent)">${data.nick}</small>
+                <div>${data.text}</div>
             </div>
         `;
         document.getElementById('messages-container').appendChild(div);
-        const container = document.getElementById('messages-container');
-        container.scrollTop = container.scrollHeight;
+        document.getElementById('messages-container').scrollTop = 999999;
     }
 
-    function send() {
+    // --- ФУНКЦИИ ЧИТОВ (Никита) ---
+    window.clearHistory = () => {
+        if(confirm("Удалить ВСЕ сообщения в базе?")) {
+            remove(ref(db, 'messages'));
+            location.reload();
+        }
+    };
+
+    window.banPrompt = async () => {
+        const target = prompt("Введите ник для БАНА:");
+        if(target) {
+            // Добавляем в список забаненных
+            await set(ref(db, 'banned/' + target), true);
+            alert(`Пользователь ${target} забанен и будет выкинут.`);
+        }
+    };
+
+    // --- БАЗОВЫЕ ФУНКЦИИ ---
+    document.getElementById('send-btn').onclick = () => {
         const text = document.getElementById('msg-input').value.trim();
-        if(text && user) {
-            push(ref(db, 'messages'), {
-                nick: user.nick,
-                avatar: user.avatar,
-                text: text,
-                time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
-            });
+        if(text) {
+            push(ref(db, 'messages'), { nick: user.nick, avatar: user.avatar, text });
             document.getElementById('msg-input').value = '';
         }
-    }
-
-    document.getElementById('send-btn').onclick = send;
-    document.getElementById('msg-input').onkeydown = (e) => e.key === 'Enter' && send();
+    };
 
     window.logout = () => {
         localStorage.removeItem('chat_session');
         location.reload();
     };
 
-    // Авто-вход если есть сессия
     const saved = localStorage.getItem('chat_session');
-    if(saved) {
-        user = JSON.parse(saved);
-        startChat();
-    }
+    if(saved) { user = JSON.parse(saved); startChat(); }
 </script>
 
 </body>
