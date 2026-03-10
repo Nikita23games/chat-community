@@ -3,141 +3,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Global Community Chat</title>
+    <title>Community Chat</title>
     <style>
         :root {
-            --bg-color: #e5ddd5;
-            --my-msg-bg: #dcf8c6;
-            --other-msg-bg: #ffffff;
-            --primary-color: #075e54;
-            --panel-bg: #ededed;
+            --bg: #e5ddd5;
+            --accent: #075e54;
+            --white: #ffffff;
+            --my-msg: #dcf8c6;
         }
-
-        body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            background: #dadbd3; 
-            margin: 0; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            height: 100vh; 
-        }
-
-        /* Окно чата адаптировано под ПК */
-        #chat-window { 
-            width: 100%; 
-            max-width: 600px; 
-            height: 90vh; 
-            background: var(--bg-color); 
-            display: none; 
-            flex-direction: column; 
-            box-shadow: 0 12px 28px rgba(0,0,0,0.12); 
-            border-radius: 8px; 
-            overflow: hidden;
-        }
-
-        /* Шапка чата */
-        header {
-            background: var(--panel-bg);
-            padding: 10px 16px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            border-bottom: 1px solid #ddd;
-        }
-
-        #user-info { display: flex; align-items: center; gap: 10px; font-weight: 500; }
-        .status-dot { width: 10px; height: 10px; background: #4ad504; border-radius: 50%; }
-
-        #messages-container { 
-            flex: 1; 
-            padding: 20px; 
-            overflow-y: auto; 
-            display: flex; 
-            flex-direction: column; 
-            gap: 8px; 
-            background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); /* Классический фон */
-        }
-
-        /* Сообщения */
-        .message { display: flex; gap: 8px; max-width: 85%; align-items: flex-end; }
-        .message.mine { align-self: flex-end; flex-direction: row-reverse; }
-        .message.others { align-self: flex-start; }
-
-        .msg-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
-        .msg-bubble { padding: 6px 10px; border-radius: 8px; box-shadow: 0 1px 1px rgba(0,0,0,0.1); position: relative; min-width: 60px; }
+        body { font-family: 'Segoe UI', sans-serif; background: #dadbd3; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; }
         
-        .mine .msg-bubble { background: var(--my-msg-bg); border-top-right-radius: 0; }
-        .others .msg-bubble { background: var(--other-msg-bg); border-top-left-radius: 0; }
-
-        .nickname { font-size: 12px; font-weight: bold; color: var(--primary-color); margin-bottom: 2px; }
-        .msg-text { font-size: 14.5px; color: #303030; line-height: 1.4; word-break: break-word; }
-        .msg-time { font-size: 10px; color: #888; text-align: right; margin-top: 4px; }
-
-        /* Ввод сообщения */
-        #input-area { background: #f0f0f0; padding: 10px 15px; display: flex; align-items: center; gap: 10px; }
-        input[type="text"] { 
-            flex: 1; 
-            padding: 12px 18px; 
-            border-radius: 20px; 
-            border: 1px solid #fff; 
-            outline: none; 
-            font-size: 15px;
-        }
-
-        button#send-btn { 
-            background: var(--primary-color); 
-            color: white; 
-            border: none; 
-            width: 42px; 
-            height: 42px; 
-            border-radius: 50%; 
-            cursor: pointer; 
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: transform 0.1s;
-        }
-        button#send-btn:active { transform: scale(0.9); }
-
         /* Авторизация */
-        #auth-overlay { position: fixed; inset: 0; background: #f0f2f5; display: flex; justify-content: center; align-items: center; z-index: 100; }
-        .auth-card { background: white; padding: 40px; border-radius: 10px; box-shadow: 0 17px 50px rgba(0,0,0,0.19); text-align: center; width: 350px; }
-        #avatar-preview { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; margin-bottom: 20px; border: 4px solid #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .auth-card input { width: 90%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 6px; }
+        #auth-container { position: fixed; inset: 0; background: #f0f2f5; display: flex; justify-content: center; align-items: center; z-index: 1000; }
+        .auth-card { background: var(--white); padding: 30px; border-radius: 12px; width: 340px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; }
+        .auth-card h2 { margin-top: 0; color: var(--accent); }
+        .auth-card input { width: 90%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; }
+        .auth-card button { width: 100%; padding: 12px; background: var(--accent); color: white; border: none; border-radius: 8px; cursor: pointer; margin-top: 15px; font-weight: bold; }
+        .toggle-link { font-size: 13px; color: #555; cursor: pointer; display: block; margin-top: 15px; text-decoration: underline; }
+
+        #preview-img { width: 90px; height: 90px; border-radius: 50%; object-fit: cover; margin-bottom: 10px; border: 3px solid var(--accent); background: #eee; }
+
+        /* Чат интерфейс */
+        #chat-window { width: 100%; max-width: 600px; height: 90vh; background: var(--bg); display: none; flex-direction: column; border-radius: 10px; overflow: hidden; box-shadow: 0 5px 30px rgba(0,0,0,0.15); }
+        header { background: #ededed; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ccc; }
         
+        #messages-container { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); }
+        
+        .message { display: flex; gap: 10px; max-width: 80%; align-items: flex-end; }
+        .message.mine { align-self: flex-end; flex-direction: row-reverse; }
+        .msg-avatar { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+        .msg-bubble { padding: 8px 12px; border-radius: 10px; background: var(--white); box-shadow: 0 1px 1px rgba(0,0,0,0.1); position: relative; }
+        .mine .msg-bubble { background: var(--my-msg); }
+        .msg-nick { font-size: 11px; font-weight: bold; color: var(--accent); margin-bottom: 3px; display: block; }
+        
+        #input-area { background: #f0f0f0; padding: 15px; display: flex; gap: 10px; align-items: center; }
+        #input-area input { flex: 1; padding: 12px 18px; border-radius: 25px; border: 1px solid #ddd; outline: none; }
+        #send-btn { background: var(--accent); color: white; border: none; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; font-size: 20px; display: flex; align-items: center; justify-content: center; }
+
+        .shake { animation: shake-msg 0.3s ease-in-out; }
+        @keyframes shake-msg { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
         .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-<div id="auth-overlay">
-    <div class="auth-card">
-        <h2>Настройка профиля</h2>
-        <img src="https://via.placeholder.com/120" id="avatar-preview">
-        <input type="file" id="avatar-input" accept="image/*">
-        <input type="text" id="reg-nick" placeholder="Ваше имя на ПК">
-        <button id="reg-btn" style="width: 100%; border-radius: 6px; height: 45px;">Войти в сообщество</button>
+<div id="auth-container">
+    <div id="reg-box" class="auth-card">
+        <h2>Создать аккаунт</h2>
+        <img src="https://via.placeholder.com/90" id="preview-img">
+        <input type="file" id="reg-file" accept="image/*">
+        <input type="text" id="reg-nick" placeholder="Никнейм">
+        <input type="password" id="reg-pass" placeholder="Пароль">
+        <button id="do-reg">Зарегистрироваться</button>
+        <span class="toggle-link" onclick="toggleAuth(false)">Уже есть аккаунт? Войти</span>
+    </div>
+
+    <div id="login-box" class="auth-card hidden">
+        <h2>Вход в чат</h2>
+        <input type="text" id="login-nick" placeholder="Никнейм">
+        <input type="password" id="login-pass" placeholder="Пароль">
+        <button id="do-login">Войти</button>
+        <span class="toggle-link" onclick="toggleAuth(true)">Новый пользователь? Регистрация</span>
     </div>
 </div>
 
 <div id="chat-window">
     <header>
-        <div id="user-info">
-            <div class="status-dot"></div>
-            <span id="display-name">Чат</span>
+        <div style="display:flex; align-items:center; gap:10px;">
+            <div style="width:10px; height:10px; background:#4ad504; border-radius:50%;"></div>
+            <strong id="my-name-title">Чат</strong>
         </div>
+        <button onclick="logout()" style="background:none; border:1px solid #bbb; border-radius:5px; cursor:pointer; padding:3px 8px;">Выйти</button>
     </header>
     <div id="messages-container"></div>
     <div id="input-area">
-        <input type="text" id="msg-input" placeholder="Введите сообщение (Enter для отправки)..." autocomplete="off">
+        <input type="text" id="msg-input" placeholder="Напишите сообщение..." autocomplete="off">
         <button id="send-btn">➤</button>
     </div>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
-    import { getDatabase, ref, push, onChildAdded, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-database.js";
+    import { getDatabase, ref, push, onChildAdded, get, child } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-database.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyD2sN925y_wx5qn-E6hFRWp77YL56SC2j0",
@@ -151,82 +98,118 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
-    const messagesRef = ref(db, 'messages');
+    let user = null;
 
-    const container = document.getElementById('messages-container');
-    const input = document.getElementById('msg-input');
-    const avatarInput = document.getElementById('avatar-input');
-    const avatarPreview = document.getElementById('avatar-preview');
-    
-    let currentUser = JSON.parse(localStorage.getItem('chat_v4_user')) || { nick: '', avatar: '' };
+    // Переключение между формами
+    window.toggleAuth = (showReg) => {
+        document.getElementById('reg-box').classList.toggle('hidden', !showReg);
+        document.getElementById('login-box').classList.toggle('hidden', showReg);
+    };
 
-    avatarInput.onchange = (e) => {
+    // Предпросмотр аватарки
+    let base64Avatar = "";
+    document.getElementById('reg-file').onchange = (e) => {
         const reader = new FileReader();
         reader.onload = (ev) => {
-            avatarPreview.src = ev.target.result;
-            currentUser.avatar = ev.target.result;
+            document.getElementById('preview-img').src = ev.target.result;
+            base64Avatar = ev.target.result;
         };
         reader.readAsDataURL(e.target.files[0]);
     };
 
-    document.getElementById('reg-btn').onclick = () => {
+    // ЛОГИКА РЕГИСТРАЦИИ
+    document.getElementById('do-reg').onclick = async () => {
         const nick = document.getElementById('reg-nick').value.trim();
-        if (!nick || !currentUser.avatar) return alert("Нужно фото и имя!");
-        currentUser.nick = nick;
-        localStorage.setItem('chat_v4_user', JSON.stringify(currentUser));
-        startChat();
+        const pass = document.getElementById('reg-pass').value.trim();
+        
+        if(!nick || !pass || !base64Avatar) return alert("Заполните всё и загрузите фото!");
+
+        const userRef = ref(db, 'users/' + nick);
+        const check = await get(userRef);
+        
+        if(check.exists()) return alert("Этот ник уже занят!");
+
+        await push(userRef, { nick, pass, avatar: base64Avatar });
+        alert("Регистрация успешна! Теперь войдите.");
+        toggleAuth(false);
+    };
+
+    // ЛОГИКА ВХОДА
+    document.getElementById('do-login').onclick = async () => {
+        const nick = document.getElementById('login-nick').value.trim();
+        const pass = document.getElementById('login-pass').value.trim();
+        
+        const snapshot = await get(child(ref(db), `users/${nick}`));
+        
+        if(snapshot.exists()) {
+            const userData = Object.values(snapshot.val())[0];
+            if(userData.pass === pass) {
+                user = userData;
+                localStorage.setItem('chat_session', JSON.stringify(user));
+                startChat();
+            } else {
+                alert("Неверный пароль!");
+            }
+        } else {
+            alert("Пользователь не найден!");
+        }
     };
 
     function startChat() {
-        document.getElementById('auth-overlay').classList.add('hidden');
+        document.getElementById('auth-container').classList.add('hidden');
         document.getElementById('chat-window').style.display = 'flex';
-        document.getElementById('display-name').textContent = currentUser.nick;
-        input.focus(); // Сразу ставим курсор в поле ввода (удобно для ПК)
+        document.getElementById('my-name-title').textContent = user.nick;
+        document.getElementById('messages-container').innerHTML = ''; // Сброс локальной истории при входе
 
-        onChildAdded(messagesRef, (snapshot) => {
-            renderMessage(snapshot.val());
+        onChildAdded(ref(db, 'messages'), (snap) => {
+            renderMessage(snap.val());
         });
     }
 
     function renderMessage(data) {
-        const isMine = data.nick === currentUser.nick;
-        const msgDiv = document.createElement('div');
-        msgDiv.className = `message ${isMine ? 'mine' : 'others'}`;
-        
-        msgDiv.innerHTML = `
+        const isMine = data.nick === user.nick;
+        const div = document.createElement('div');
+        div.className = `message ${isMine ? 'mine' : 'others'} shake`;
+        div.innerHTML = `
             <img src="${data.avatar}" class="msg-avatar">
             <div class="msg-bubble">
-                <div class="nickname">${isMine ? 'Вы' : data.nick}</div>
-                <div class="msg-text">${data.text}</div>
-                <div class="msg-time">${data.time}</div>
+                <span class="msg-nick">${isMine ? 'Вы' : data.nick}</span>
+                <div style="word-break:break-word;">${data.text}</div>
+                <div style="font-size:9px; color:#888; text-align:right; margin-top:4px;">${data.time}</div>
             </div>
         `;
-        
-        container.appendChild(msgDiv);
+        document.getElementById('messages-container').appendChild(div);
+        const container = document.getElementById('messages-container');
         container.scrollTop = container.scrollHeight;
     }
 
-    function sendMessage() {
-        const text = input.value.trim();
-        if (text) {
-            const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            push(messagesRef, {
-                nick: currentUser.nick,
-                avatar: currentUser.avatar,
+    function send() {
+        const text = document.getElementById('msg-input').value.trim();
+        if(text && user) {
+            push(ref(db, 'messages'), {
+                nick: user.nick,
+                avatar: user.avatar,
                 text: text,
-                time: time,
-                timestamp: serverTimestamp()
+                time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
             });
-            input.value = '';
+            document.getElementById('msg-input').value = '';
         }
     }
 
-    if (currentUser.nick) startChat();
+    document.getElementById('send-btn').onclick = send;
+    document.getElementById('msg-input').onkeydown = (e) => e.key === 'Enter' && send();
 
-    document.getElementById('send-btn').onclick = sendMessage;
-    input.onkeydown = (e) => {
-        if (e.key === 'Enter') sendMessage();
+    window.logout = () => {
+        localStorage.removeItem('chat_session');
+        location.reload();
     };
+
+    // Авто-вход если есть сессия
+    const saved = localStorage.getItem('chat_session');
+    if(saved) {
+        user = JSON.parse(saved);
+        startChat();
+    }
 </script>
 
 </body>
