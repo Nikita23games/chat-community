@@ -1,0 +1,275 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Web Chat</title>
+    <style>
+        :root {
+            --bg-color: #e5ddd5;
+            --my-msg-bg: #dcf8c6;
+            --other-msg-bg: #ffffff;
+            --primary-color: #075e54;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background-color: #d1d1d1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        /* Авторизация */
+        #auth-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .auth-card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            width: 300px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        #avatar-preview {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin: 0 auto;
+            border: 3px solid var(--primary-color);
+        }
+
+        /* Окно чата */
+        #chat-window {
+            width: 500px;
+            height: 80vh;
+            background: var(--bg-color);
+            display: none;
+            flex-direction: column;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        #messages-container {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        /* Сообщения */
+        .message {
+            display: flex;
+            gap: 10px;
+            max-width: 75%;
+            position: relative;
+        }
+
+        /* Свои — Справа */
+        .message.mine {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+
+        /* Чужие — Слева */
+        .message.others {
+            align-self: flex-start;
+        }
+
+        .msg-avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .msg-bubble {
+            padding: 8px 12px;
+            border-radius: 10px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        .mine .msg-bubble { background: var(--my-msg-bg); }
+        .others .msg-bubble { background: var(--other-msg-bg); }
+
+        .nickname {
+            font-size: 11px;
+            font-weight: bold;
+            color: #075e54;
+            display: block;
+            margin-bottom: 3px;
+        }
+
+        .msg-time {
+            font-size: 10px;
+            color: #888;
+            text-align: right;
+            margin-top: 4px;
+        }
+
+        /* Эффект Shake */
+        .shake-effect { animation: shake 0.3s ease-in-out; }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-4px); }
+            75% { transform: translateX(4px); }
+        }
+
+        #input-area {
+            background: #f0f0f0;
+            padding: 15px;
+            display: flex;
+            gap: 10px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 25px;
+            outline: none;
+        }
+
+        button {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+<div id="auth-overlay">
+    <div class="auth-card">
+        <h3>Ваш профиль</h3>
+        <img src="https://via.placeholder.com/90" id="avatar-preview">
+        <input type="file" id="avatar-input" accept="image/*">
+        <input type="text" id="reg-nick" placeholder="Введите имя...">
+        <button id="reg-btn" style="width: 100%; border-radius: 8px;">Войти</button>
+    </div>
+</div>
+
+<div id="chat-window">
+    <div id="messages-container"></div>
+    <div id="input-area">
+        <input type="text" id="msg-input" placeholder="Сообщение..." autocomplete="off">
+        <button id="send-btn">➤</button>
+    </div>
+</div>
+
+<script>
+    const container = document.getElementById('messages-container');
+    const input = document.getElementById('msg-input');
+    const avatarInput = document.getElementById('avatar-input');
+    const avatarPreview = document.getElementById('avatar-preview');
+    
+    let currentUser = { nick: '', avatar: '' };
+
+    // Обработка аватара
+    avatarInput.onchange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                avatarPreview.src = ev.target.result;
+                currentUser.avatar = ev.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    // Вход
+    document.getElementById('reg-btn').onclick = () => {
+        const nick = document.getElementById('reg-nick').value.trim();
+        if (!nick || !currentUser.avatar) return alert("Заполните все данные!");
+        
+        currentUser.nick = nick;
+        localStorage.setItem('chat_user_v3', JSON.stringify(currentUser));
+        document.getElementById('auth-overlay').classList.add('hidden');
+        document.getElementById('chat-window').style.display = 'flex';
+        loadHistory();
+    };
+
+    function renderMessage(data, isNew = true) {
+        const isMine = data.nick === currentUser.nick;
+        const time = data.time || new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `message ${isMine ? 'mine' : 'others'}`;
+        if (isNew) msgDiv.classList.add('shake-effect');
+
+        msgDiv.innerHTML = `
+            <img src="${data.avatar}" class="msg-avatar">
+            <div class="msg-bubble">
+                <span class="nickname">${isMine ? 'Вы' : data.nick}</span>
+                <div>${data.text}</div>
+                <div class="msg-time">${time}</div>
+            </div>
+        `;
+        
+        container.appendChild(msgDiv);
+        container.scrollTop = container.scrollHeight;
+    }
+
+    function sendMessage() {
+        const text = input.value.trim();
+        if (text) {
+            const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            const msgData = { ...currentUser, text, time };
+            
+            renderMessage(msgData, true);
+            
+            // Сохранение истории
+            const history = JSON.parse(localStorage.getItem('chat_history_v3') || '[]');
+            history.push(msgData);
+            localStorage.setItem('chat_history_v3', JSON.stringify(history));
+            
+            input.value = '';
+        }
+    }
+
+    function loadHistory() {
+        const history = JSON.parse(localStorage.getItem('chat_history_v3') || '[]');
+        history.forEach(msg => renderMessage(msg, false));
+    }
+
+    // Проверка сессии
+    const saved = localStorage.getItem('chat_user_v3');
+    if (saved) {
+        currentUser = JSON.parse(saved);
+        document.getElementById('auth-overlay').classList.add('hidden');
+        document.getElementById('chat-window').style.display = 'flex';
+        loadHistory();
+    }
+
+    document.getElementById('send-btn').onclick = sendMessage;
+    input.onkeypress = (e) => e.key === 'Enter' && sendMessage();
+</script>
+
+</body>
+</html>
