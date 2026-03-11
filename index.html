@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Nikita Chat v28 - Farm Fixed</title>
+    <title>Nikita Final Chat v29</title>
     <style>
         :root { --bg: #e5ddd5; --accent: #075e54; --white: #fff; --red: #d32f2f; --gold: #ffc107; --gray: #f0f0f0; }
         body, html { font-family: 'Segoe UI', sans-serif; background: #111; margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; }
@@ -19,28 +19,29 @@
         .avatar { width: 38px; height: 38px; border-radius: 50%; background: #555; flex-shrink: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; }
         .avatar img { width: 100%; height: 100%; object-fit: cover; }
         
-        .message { display: flex; gap: 8px; max-width: 85%; animation: shake 0.4s both; }
-        @keyframes shake { 10%, 90% { transform: translate3d(-1px, 0, 0); } 40%, 60% { transform: translate3d(2px, 0, 0); } }
+        /* ЭФФЕКТ ТРЯСКИ ПРИ ОТПРАВКЕ */
+        .message { display: flex; gap: 8px; max-width: 85%; animation: cardShake 0.4s both; }
+        @keyframes cardShake { 10%, 90% { transform: translate3d(-1px, 0, 0); } 40%, 60% { transform: translate3d(2px, 0, 0); } }
         .message.mine { align-self: flex-end; flex-direction: row-reverse; }
         .msg-bubble { padding: 8px 12px; border-radius: 15px; background: white; box-shadow: 0 1px 2px rgba(0,0,0,0.1); position: relative; }
         .mine .msg-bubble { background: #dcf8c6; }
         
+        .chat-img { max-width: 100%; border-radius: 10px; margin-top: 5px; display: block; cursor: pointer; }
         .bot-bubble { background: #fff9c4 !important; border: 1px solid var(--gold); }
         .hidden { display: none !important; }
 
         /* ПРОФИЛЬ */
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 4000; padding: 20px; }
         .modal-card { background: white; border-radius: 25px; width: 100%; max-width: 320px; padding: 25px; text-align: center; }
-        .profile-ava-big { width: 100px; height: 100px; border-radius: 50%; background: var(--gray); margin: 0 auto 15px; border: 4px solid var(--accent); overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 40px; cursor: pointer; }
+        .profile-ava-big { width: 100px; height: 100px; border-radius: 50%; background: var(--gray); margin: 0 auto 15px; border: 4px solid var(--accent); overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 40px; }
         .profile-ava-big img { width: 100%; height: 100%; object-fit: cover; }
-        .stat-box { background: var(--gray); padding: 10px; border-radius: 15px; margin: 10px 0; display: flex; justify-content: space-around; }
     </style>
 </head>
 <body>
 
 <div id="auth-container" style="position:fixed; inset:0; background:#f0f2f5; display:flex; justify-content:center; align-items:center; z-index:5000;">
     <div style="background:white; padding:30px; border-radius:25px; width:280px; text-align:center;">
-        <h2 style="color:var(--accent)">Nikita v28</h2>
+        <h2 style="color:var(--accent)">Nikita Chat v29</h2>
         <input type="text" id="login-nick" placeholder="Никнейм" style="width:100%; padding:12px; margin:8px 0; border:1px solid #ddd; border-radius:10px;">
         <input type="password" id="login-pass" placeholder="Пароль" style="width:100%; padding:12px; margin:8px 0; border:1px solid #ddd; border-radius:10px;">
         <button id="btn-enter" style="width:100%; padding:14px; background:var(--accent); color:white; border:none; border-radius:12px; font-weight:bold;">ВОЙТИ</button>
@@ -51,12 +52,9 @@
     <div class="modal-card">
         <div class="profile-ava-big" id="p-ava-view" onclick="document.getElementById('p-file').click()">?</div>
         <input type="file" id="p-file" class="hidden" accept="image/*">
-        <h3 id="p-nick-view" style="margin:0;">...</h3>
-        <div class="stat-box">
-            <div><small>Монеты</small><br><strong id="p-coins-view" style="color:var(--gold)">0 💰</strong></div>
-            <div><small>Фарм через</small><br><strong id="p-timer-view">...</strong></div>
-        </div>
-        <button onclick="closeModal('profile-modal')" style="width:100%; padding:12px; background:var(--accent); color:white; border:none; border-radius:12px; font-weight:bold; cursor:pointer;">ОК</button>
+        <h3 id="p-nick-view">...</h3>
+        <p id="p-coins-view" style="color:var(--gold); font-weight:bold; font-size:20px;">0 💰</p>
+        <button onclick="closeModal('profile-modal')" style="width:100%; padding:12px; background:var(--accent); color:white; border:none; border-radius:12px; font-weight:bold;">ЗАКРЫТЬ</button>
     </div>
 </div>
 
@@ -64,16 +62,16 @@
     <header>
         <div style="display:flex; align-items:center; gap:10px; cursor:pointer;" onclick="openProfile()">
             <div id="my-ava" class="avatar"></div>
-            <div>
-                <strong id="my-name">...</strong><br>
-                <small id="my-coins-header" style="color:var(--gold); font-weight:bold;">💰 0</small>
-            </div>
+            <strong><span id="my-name">...</span></strong>
         </div>
-        <button onclick="localStorage.clear(); location.reload();" style="border:none; background:none; color:var(--accent); font-weight:bold;">Выход</button>
+        <small id="my-coins-header" style="color:var(--gold); font-weight:bold;">💰 0</small>
     </header>
+    
     <div id="messages-container"></div>
+
     <div id="input-area">
-        <textarea id="msg-input" placeholder="Напиши 'фарм'..." rows="1"></textarea>
+        <label style="cursor:pointer; font-size:24px;">🖼️<input type="file" id="chat-file-input" class="hidden" accept="image/*"></label>
+        <textarea id="msg-input" placeholder="Сообщение или 'фарм'..." rows="1"></textarea>
         <button id="send-btn" style="background:var(--accent); color:white; border:none; width:40px; height:40px; border-radius:50%;">➤</button>
     </div>
 </div>
@@ -126,36 +124,48 @@
         const snap = await get(ref(db, 'users/' + nick));
         user = snap.exists() ? snap.val() : { nick, pass, avatar: "", coins: 0, lastFarm: 0 };
         await set(ref(db, 'users/' + nick), user);
-        localStorage.setItem('chat_v28', JSON.stringify(user));
+        localStorage.setItem('chat_v29', JSON.stringify(user));
         location.reload();
     };
 
     function startChat() {
         document.getElementById('auth-container').classList.add('hidden');
         document.getElementById('chat-window').style.display = 'flex';
-        updateHeader();
+        document.getElementById('my-name').textContent = user.nick;
+        document.getElementById('my-ava').innerHTML = user.avatar ? `<img src="${user.avatar}">` : user.nick[0].toUpperCase();
+
         onChildAdded(ref(db, 'messages'), (s) => {
             const data = s.val();
             renderMessage(data);
             if (data.nick !== user.nick && data.nick !== 'BANKER') {
-                sendNotify(`От ${data.nick}`, data.content);
+                const text = data.type === 'image' ? "📸 Картинка" : data.content;
+                sendNotify(`От ${data.nick}`, text);
             }
         });
     }
 
-    function updateHeader() {
-        document.getElementById('my-name').textContent = user.nick;
-        document.getElementById('my-ava').innerHTML = user.avatar ? `<img src="${user.avatar}">` : user.nick[0].toUpperCase();
-    }
+    // ОТПРАВКА КАРТИНКИ
+    document.getElementById('chat-file-input').onchange = (e) => {
+        const file = e.target.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = async (ev) => {
+            await push(ref(db, 'messages'), { 
+                nick: user.nick, 
+                type: 'image', 
+                content: ev.target.result 
+            });
+        };
+        reader.readAsDataURL(file);
+    };
 
-    async function handleSend() {
+    // ОТПРАВКА ТЕКСТА И ФАРМ
+    document.getElementById('send-btn').onclick = async () => {
         const val = document.getElementById('msg-input').value.trim();
         if(!val) return;
 
-        // 1. Отправляем сообщение в чат
         await push(ref(db, 'messages'), { nick: user.nick, type: 'text', content: val });
 
-        // 2. Проверяем ФАРМ
         if(val.toLowerCase() === 'фарм') {
             const now = Date.now();
             const wait = 30 * 60 * 1000;
@@ -165,27 +175,30 @@
                 let newCoins = (user.coins || 0) + 20;
                 await set(ref(db, `users/${user.nick}/coins`), newCoins);
                 await set(ref(db, `users/${user.nick}/lastFarm`), now);
-                await push(ref(db, 'messages'), { nick: 'BANKER', type: 'bot', content: `✅ ${user.nick}, +20 монет получено!` });
+                await push(ref(db, 'messages'), { nick: 'BANKER', type: 'bot', content: `✅ ${user.nick}, +20 монет!` });
             } else {
-                const remains = Math.ceil((wait - diff) / 60000);
-                await push(ref(db, 'messages'), { nick: 'BANKER', type: 'bot', content: `⏳ Рано! Жди еще ${remains} мин.` });
+                const min = Math.ceil((wait - diff) / 60000);
+                await push(ref(db, 'messages'), { nick: 'BANKER', type: 'bot', content: `⏳ Жди ${min} мин.` });
             }
         }
         document.getElementById('msg-input').value = "";
-    }
-
-    document.getElementById('send-btn').onclick = handleSend;
+    };
 
     function renderMessage(d) {
         const container = document.getElementById('messages-container');
         const div = document.createElement('div');
         const isBot = d.nick === 'BANKER';
-        div.className = `message ${d.nick === user.nick ? 'mine' : ''} ${isBot ? 'bot-msg' : ''}`;
+        div.className = `message ${d.nick === user.nick ? 'mine' : ''}`;
         
         const ava = isBot ? "https://cdn-icons-png.flaticon.com/512/272/272525.png" : userAvatars[d.nick];
+        const content = d.type === 'image' ? `<img src="${d.content}" class="chat-img" onclick="window.open('${d.content}')">` : d.content;
+        
         div.innerHTML = `
             <div class="avatar">${ava ? `<img src="${ava}">` : (d.nick ? d.nick[0].toUpperCase() : "?")}</div>
-            <div class="msg-bubble ${isBot ? 'bot-bubble' : ''}">${d.content}</div>`;
+            <div class="msg-bubble ${isBot ? 'bot-bubble' : ''}">
+                <small style="display:block; font-size:10px; opacity:0.6;">${d.nick}</small>
+                ${content}
+            </div>`;
         container.appendChild(div);
         container.scrollTop = container.scrollHeight;
     }
@@ -194,17 +207,24 @@
         document.getElementById('p-nick-view').textContent = user.nick;
         document.getElementById('p-coins-view').textContent = `${user.coins || 0} 💰`;
         document.getElementById('p-ava-view').innerHTML = user.avatar ? `<img src="${user.avatar}">` : user.nick[0].toUpperCase();
-        
-        const diff = Date.now() - (user.lastFarm || 0);
-        const wait = 30 * 60 * 1000;
-        document.getElementById('p-timer-view').textContent = diff < wait ? Math.ceil((wait - diff) / 60000) + " мин." : "Готово ✅";
-        
         document.getElementById('profile-modal').style.display = 'flex';
     };
 
     window.closeModal = (id) => document.getElementById(id).style.display = 'none';
 
-    const saved = localStorage.getItem('chat_v28');
+    // СМЕНА АВЫ В ПРОФИЛЕ
+    document.getElementById('p-file').onchange = (e) => {
+        const reader = new FileReader();
+        reader.onload = async (ev) => {
+            user.avatar = ev.target.result;
+            await set(ref(db, `users/${user.nick}/avatar`), user.avatar);
+            document.getElementById('p-ava-view').innerHTML = `<img src="${user.avatar}">`;
+            document.getElementById('my-ava').innerHTML = `<img src="${user.avatar}">`;
+        };
+        reader.readAsDataURL(e.target.files[0]);
+    };
+
+    const saved = localStorage.getItem('chat_v29');
     if(saved) { user = JSON.parse(saved); startChat(); }
 </script>
 </body>
