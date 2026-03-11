@@ -3,95 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Nikita Dynamic Chat v22</title>
+    <title>Nikita Notify Chat v27</title>
     <style>
-        :root { --bg: #e5ddd5; --accent: #075e54; --white: #fff; --red: #d32f2f; --gray: #888; }
+        :root { --bg: #e5ddd5; --accent: #075e54; --white: #fff; --red: #d32f2f; --gold: #ffc107; --gray: #f0f0f0; }
         body, html { font-family: 'Segoe UI', sans-serif; background: #111; margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; }
-
         #chat-window { width: 100%; max-width: 450px; background: var(--bg); display: none; flex-direction: column; height: 100%; margin: 0 auto; position: relative; }
         header { background: #ededed; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ccc; flex-shrink: 0; }
-        
         #messages-container { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); }
-        #input-area { background: #f0f0f0; padding: 10px 15px; padding-bottom: calc(45px + env(safe-area-inset-bottom)); display: flex; gap: 10px; border-top: 1px solid #ddd; align-items: flex-end; flex-shrink: 0; }
-        #msg-input { flex: 1; padding: 12px 18px; border-radius: 20px; border: 1px solid #ccc; outline: none; font-size: 16px; background: white; resize: none; max-height: 100px; font-family: inherit; }
-        #send-btn { background: var(--accent); color: white; border: none; width: 48px; height: 48px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-
-        /* АВАТАРКИ */
-        .avatar { width: 38px; height: 38px; border-radius: 50%; background: #555; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; flex-shrink: 0; overflow: hidden; font-size: 16px; }
+        #input-area { background: #f0f0f0; padding: 10px 15px; padding-bottom: calc(20px + env(safe-area-inset-bottom)); display: flex; gap: 8px; border-top: 1px solid #ddd; align-items: center; flex-shrink: 0; }
+        #msg-input { flex: 1; padding: 10px 15px; border-radius: 20px; border: 1px solid #ccc; outline: none; font-size: 16px; background: white; resize: none; max-height: 80px; }
+        .avatar { width: 38px; height: 38px; border-radius: 50%; background: #555; flex-shrink: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; }
         .avatar img { width: 100%; height: 100%; object-fit: cover; }
-
-        /* СООБЩЕНИЯ */
-        .message { display: flex; gap: 8px; max-width: 85%; animation: shake 0.3s ease; }
-        @keyframes shake { 0% { transform: translateX(5px); } 50% { transform: translateX(-3px); } 100% { transform: translateX(0); } }
+        .message { display: flex; gap: 8px; max-width: 85%; animation: cardShake 0.4s both; }
+        @keyframes cardShake { 10%, 90% { transform: translate3d(-1px, 0, 0); } 40%, 60% { transform: translate3d(2px, 0, 0); } }
         .message.mine { align-self: flex-end; flex-direction: row-reverse; }
-        .msg-bubble { padding: 10px 14px; border-radius: 15px; background: white; box-shadow: 0 1px 2px rgba(0,0,0,0.1); word-wrap: break-word; }
+        .msg-bubble { padding: 8px 12px; border-radius: 15px; background: white; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
         .mine .msg-bubble { background: #dcf8c6; }
-        .msg-system { align-self: center; background: rgba(0,0,0,0.05); color: #555; padding: 5px 15px; border-radius: 10px; font-size: 13px; font-style: italic; margin: 5px 0; text-align: center; }
-
-        /* БАН */
-        #ban-overlay { position: fixed; inset: 0; background: #fff; display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 5000; text-align: center; padding: 30px; }
-        #auth-container { position: fixed; inset: 0; background: #f0f2f5; display: flex; justify-content: center; align-items: center; z-index: 3000; }
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 2000; padding: 20px; }
-        .modal-card { background: white; padding: 20px; border-radius: 20px; width: 100%; max-width: 320px; }
         .hidden { display: none !important; }
-        .admin-opt { background: var(--red); color: white; border: none; padding: 12px; width: 100%; border-radius: 10px; font-weight: bold; margin-bottom: 8px; cursor: pointer; }
     </style>
 </head>
 <body>
 
-<div id="ban-overlay">
-    <h1 style="color:var(--red)">БАН</h1>
-    <p>Доступ закрыт.</p>
-    <button onclick="localStorage.clear(); location.reload();" style="padding:10px 20px; background:var(--accent); color:white; border:none; border-radius:10px;">ОК</button>
-</div>
-
-<div id="auth-container">
-    <div style="background:white; padding:25px; border-radius:20px; width:280px; text-align:center;">
-        <h2 style="color:var(--accent)">Nikita Chat v22</h2>
-        <input type="text" id="login-nick" placeholder="Никнейм" style="width:100%; padding:10px; margin:5px 0; border:1px solid #ddd; border-radius:8px;">
-        <input type="password" id="login-pass" placeholder="Пароль" style="width:100%; padding:10px; margin:5px 0; border:1px solid #ddd; border-radius:8px;">
-        <button id="btn-enter" style="width:100%; padding:12px; background:var(--accent); color:white; border:none; border-radius:8px; margin-top:10px;">ВОЙТИ</button>
+<div id="auth-container" style="position:fixed; inset:0; background:#f0f2f5; display:flex; justify-content:center; align-items:center; z-index:5000;">
+    <div style="background:white; padding:30px; border-radius:25px; width:280px; text-align:center;">
+        <h2 style="color:var(--accent)">Nikita v27</h2>
+        <input type="text" id="login-nick" placeholder="Никнейм" style="width:100%; padding:12px; margin:8px 0; border:1px solid #ddd; border-radius:10px;">
+        <input type="password" id="login-pass" placeholder="Пароль" style="width:100%; padding:12px; margin:8px 0; border:1px solid #ddd; border-radius:10px;">
+        <button id="btn-enter" style="width:100%; padding:14px; background:var(--accent); color:white; border:none; border-radius:12px; font-weight:bold;">ВОЙТИ</button>
     </div>
 </div>
 
 <div id="chat-window">
     <header>
-        <div style="display:flex; align-items:center; gap:10px; cursor:pointer;" onclick="openProfile()">
+        <div style="display:flex; align-items:center; gap:10px;">
             <div id="my-ava" class="avatar"></div>
-            <strong id="my-name">...</strong>
+            <strong><span id="my-name">...</span></strong>
         </div>
-        <button id="admin-btn" class="hidden" onclick="openAdmin()" style="background:var(--red); color:white; border:none; padding:5px 10px; border-radius:5px;">ЧИТЫ</button>
+        <small id="my-coins-header" style="color:var(--gold); font-weight:bold;">💰 0</small>
     </header>
     <div id="messages-container"></div>
     <div id="input-area">
         <textarea id="msg-input" placeholder="Сообщение..."></textarea>
-        <button id="send-btn">➤</button>
-    </div>
-</div>
-
-<div id="profile-modal" class="modal">
-    <div class="modal-card" style="text-align:center;">
-        <h3>Профиль</h3>
-        <div id="edit-ava-preview" style="width:80px;height:80px;border-radius:50%;background:#eee;margin:0 auto 10px;border:3px solid var(--accent);display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:pointer;" onclick="document.getElementById('file-input').click()">?</div>
-        <input type="file" id="file-input" class="hidden" accept="image/*">
-        <textarea id="edit-desc" placeholder="Статус" style="width:100%; height:60px; margin-bottom:10px;"></textarea>
-        <button class="admin-opt" style="background:var(--accent)" onclick="saveProfile()">СОХРАНИТЬ</button>
-        <button onclick="closeModal('profile-modal')">Закрыть</button>
-    </div>
-</div>
-
-<div id="admin-modal" class="modal">
-    <div class="modal-card">
-        <h3>Админка</h3>
-        <button class="admin-opt" onclick="openBanMenu()">🚫 Забанить</button>
-        <button class="admin-opt" style="background:#333" onclick="openBlackList()">🖤 ЧС</button>
-        <button onclick="closeModal('admin-modal')">Закрыть</button>
+        <button id="send-btn" style="background:var(--accent); color:white; border:none; width:40px; height:40px; border-radius:50%;">➤</button>
     </div>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
-    import { getDatabase, ref, push, onChildAdded, get, set, onValue, remove } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-database.js";
+    import { getDatabase, ref, push, onChildAdded, get, set, onValue } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-database.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyD2sN925y_wx5qn-E6hFRWp77YL56SC2j0",
@@ -106,18 +65,33 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
     let user = null;
-    let userAvatars = {}; // Здесь храним актуальные аватарки всех юзеров
+    let userAvatars = {};
 
-    // 1. СЛУШАЕМ ИЗМЕНЕНИЯ ВСЕХ ПОЛЬЗОВАТЕЛЕЙ (для обновления аватарок)
-    onValue(ref(db, 'users'), (snapshot) => {
-        if(snapshot.exists()) {
-            const usersData = snapshot.val();
-            for(let nick in usersData) {
-                userAvatars[nick] = usersData[nick].avatar || "";
-                // Обновляем все аватарки этого пользователя на экране прямо сейчас
-                document.querySelectorAll(`.ava-${nick}`).forEach(div => {
-                    div.innerHTML = userAvatars[nick] ? `<img src="${userAvatars[nick]}">` : nick[0].toUpperCase();
-                });
+    // 1. ЗАПРОС НА УВЕДОМЛЕНИЯ
+    if ("Notification" in window) {
+        Notification.requestPermission();
+    }
+
+    // 2. ФУНКЦИЯ ОТПРАВКИ УВЕДОМЛЕНИЯ
+    function sendNotification(title, text) {
+        // Проверяем: если вкладка НЕ в фокусе и разрешение дано
+        if (document.hidden && Notification.permission === "granted") {
+            new Notification(title, {
+                body: text,
+                icon: "https://cdn-icons-png.flaticon.com/512/733/733585.png" 
+            });
+        }
+    }
+
+    onValue(ref(db, 'users'), (snap) => {
+        if(snap.exists()){
+            const data = snap.val();
+            for(let n in data) {
+                userAvatars[n] = data[n].avatar || "";
+                if(user && n === user.nick) {
+                    user.coins = data[n].coins || 0;
+                    document.getElementById('my-coins-header').textContent = `💰 ${user.coins}`;
+                }
             }
         }
     });
@@ -125,93 +99,55 @@
     document.getElementById('btn-enter').onclick = async () => {
         const nick = document.getElementById('login-nick').value.trim();
         const pass = document.getElementById('login-pass').value.trim();
-        const banSnap = await get(ref(db, 'banned/' + nick));
-        if(banSnap.exists()) return document.getElementById('ban-overlay').style.display = 'flex';
-        
+        if(!nick || !pass) return;
         const snap = await get(ref(db, 'users/' + nick));
-        user = snap.exists() ? snap.val() : { nick, pass, avatar: "", desc: "" };
-        if(nick === "Nikita" && pass === "nikitakit") user.isAdmin = true;
-        
+        user = snap.exists() ? snap.val() : { nick, pass, avatar: "", coins: 0 };
         await set(ref(db, 'users/' + nick), user);
-        localStorage.setItem('chat_v22', JSON.stringify(user));
+        localStorage.setItem('chat_v27', JSON.stringify(user));
         location.reload();
     };
 
     function startChat() {
         document.getElementById('auth-container').classList.add('hidden');
         document.getElementById('chat-window').style.display = 'flex';
-        if(user.isAdmin) document.getElementById('admin-btn').classList.remove('hidden');
-        updateHeader();
-
-        onValue(ref(db, 'banned/' + user.nick), (s) => { if(s.exists()) location.reload(); });
-        onChildAdded(ref(db, 'messages'), (s) => renderMessage(s.val()));
-    }
-
-    function updateHeader() {
         document.getElementById('my-name').textContent = user.nick;
-        const myAvaDiv = document.getElementById('my-ava');
-        myAvaDiv.innerHTML = user.avatar ? `<img src="${user.avatar}">` : user.nick[0].toUpperCase();
+        document.getElementById('my-ava').innerHTML = user.avatar ? `<img src="${user.avatar}">` : user.nick[0].toUpperCase();
+
+        onChildAdded(ref(db, 'messages'), (s) => {
+            const data = s.val();
+            renderMessage(data);
+            
+            // 3. ЛОГИКА УВЕДОМЛЕНИЯ
+            // Если сообщение не от меня и я не в сети (вкладка скрыта)
+            if (data.nick !== user.nick && data.nick !== 'BANKER') {
+                const msgText = data.type === 'image' ? "📸 Изображение" : data.content;
+                sendNotification(`Новое от ${data.nick}`, msgText);
+            }
+        });
     }
-
-    window.saveProfile = async () => {
-        user.desc = document.getElementById('edit-desc').value;
-        await set(ref(db, 'users/' + user.nick), user);
-        localStorage.setItem('chat_v22', JSON.stringify(user));
-        updateHeader();
-        closeModal('profile-modal');
-    };
-
-    document.getElementById('file-input').onchange = (e) => {
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-            user.avatar = ev.target.result;
-            document.getElementById('edit-ava-preview').innerHTML = `<img src="${user.avatar}">`;
-        };
-        reader.readAsDataURL(e.target.files[0]);
-    };
 
     function renderMessage(d) {
         const container = document.getElementById('messages-container');
         const div = document.createElement('div');
+        div.className = `message ${d.nick === user.nick ? 'mine' : ''}`;
+        const content = d.type === 'image' ? `<img src="${d.content}" style="width:100%; border-radius:10px;">` : d.content;
+        const ava = d.nick === 'BANKER' ? 'https://cdn-icons-png.flaticon.com/512/272/272525.png' : userAvatars[d.nick];
         
-        if(d.type === 'system') {
-            div.className = 'msg-system';
-            div.textContent = d.text;
-        } else {
-            const isMine = d.nick === user.nick;
-            div.className = `message ${isMine ? 'mine' : ''}`;
-            // Добавляем специальный класс ava-НИК, чтобы найти и обновить все авы сразу
-            div.innerHTML = `
-                <div class="avatar ava-${d.nick}">
-                    ${userAvatars[d.nick] ? `<img src="${userAvatars[d.nick]}">` : d.nick[0].toUpperCase()}
-                </div>
-                <div class="msg-bubble">
-                    <small style="display:block; font-weight:bold; color:var(--accent); font-size:10px;">${d.nick}</small>
-                    ${d.text}
-                </div>`;
-        }
+        div.innerHTML = `
+            <div class="avatar">${ava ? `<img src="${ava}">` : (d.nick ? d.nick[0].toUpperCase() : "?")}</div>
+            <div class="msg-bubble">${content}</div>`;
         container.appendChild(div);
         container.scrollTop = container.scrollHeight;
     }
 
-    function send() {
-        const t = document.getElementById('msg-input').value.trim();
-        if(t) {
-            push(ref(db, 'messages'), { nick: user.nick, text: t }); // Больше не шлем аву в сообщение!
-            document.getElementById('msg-input').value = "";
-        }
-    }
-
-    document.getElementById('send-btn').onclick = send;
-    window.openProfile = () => {
-        document.getElementById('edit-ava-preview').innerHTML = user.avatar ? `<img src="${user.avatar}">` : user.nick[0];
-        document.getElementById('edit-desc').value = user.desc || "";
-        document.getElementById('profile-modal').style.display = 'flex';
+    document.getElementById('send-btn').onclick = async () => {
+        const val = document.getElementById('msg-input').value.trim();
+        if(!val) return;
+        await push(ref(db, 'messages'), { nick: user.nick, type: 'text', content: val });
+        document.getElementById('msg-input').value = "";
     };
-    window.closeModal = (id) => document.getElementById(id).style.display = 'none';
-    window.openAdmin = () => document.getElementById('admin-modal').style.display = 'flex';
 
-    const saved = localStorage.getItem('chat_v22');
+    const saved = localStorage.getItem('chat_v27');
     if(saved) { user = JSON.parse(saved); startChat(); }
 </script>
 </body>
